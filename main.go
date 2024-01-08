@@ -47,4 +47,5 @@ func main() {
 	inequalities, err := initializeInequalities(file)
 
 	println(inequalities.evaluate(listVar, []float64{0.45, 0.45}))
+	parallelisation(listVar, 100000, 10)
 }
