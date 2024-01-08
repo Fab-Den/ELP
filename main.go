@@ -42,4 +42,5 @@ func main() {
 	for _, V := range listVar {
 		println(V.name, V.ran[0], V.ran[1])
 	}
+	parallelisation(listVar, 100000, 10)
 }
