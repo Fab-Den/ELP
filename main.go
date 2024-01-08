@@ -25,17 +25,21 @@ func main() {
 	}
 	listVar, err := initializeVariables(file)
 
-	for _, V := range listVar {
+	for i := range listVar {
 
 		_, err = file.Seek(0, 0)
 		if err != nil {
 
 		}
 
-		err := V.setVariableRange(file)
+		err := listVar[i].setVariableRange(file)
+
 		if err != nil {
 			println(err.Error())
 		}
 	}
 
+	for _, V := range listVar {
+		println(V.name, V.ran[0], V.ran[1])
+	}
 }

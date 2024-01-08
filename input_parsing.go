@@ -54,6 +54,7 @@ func (V *Variable) setVariableRange(file *os.File) error {
 }
 
 func initializeVariables(file *os.File) ([]Variable, error) {
+
 	var listOfVariables []Variable
 
 	scanner := bufio.NewScanner(file)
