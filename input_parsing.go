@@ -75,3 +75,12 @@ func initializeVariables(file *os.File) ([]Variable, error) {
 		return listOfVariables, fmt.Errorf("empty file")
 	}
 }
+
+func findVariableIndex(listVar []Variable, name string) int {
+	for i, V := range listVar {
+		if V.name == name {
+			return i
+		}
+	}
+	return -1
+}
