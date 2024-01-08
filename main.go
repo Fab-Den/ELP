@@ -42,4 +42,9 @@ func main() {
 	for _, V := range listVar {
 		println(V.name, V.ran[0], V.ran[1])
 	}
+
+	_, err = file.Seek(0, 0)
+	inequalities, err := initializeInequalities(file)
+
+	println(inequalities.evaluate(listVar, []float64{0.45, 0.45}))
 }

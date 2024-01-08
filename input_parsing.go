@@ -13,7 +13,11 @@ type Variable struct {
 	ran  [2]float64
 }
 
-type Ineq struct {
+type Inequalities struct {
+	inequalities []Inequality
+}
+
+type Inequality struct {
 	// left < right
 	str   string
 	left  Operation
@@ -25,7 +29,8 @@ type Operation struct {
 	elements   []Operation
 }
 
-func (I *Ineq) evaluate(listVar []Variable, varValues []float64) bool {
+func (I *Inequality) evaluate(listVar []Variable, varValues []float64) bool {
+
 	if I.left.getValue(listVar, varValues) < I.right.getValue(listVar, varValues) {
 		return true
 	} else {
@@ -33,7 +38,16 @@ func (I *Ineq) evaluate(listVar []Variable, varValues []float64) bool {
 	}
 }
 
-func (I *Ineq) innit() {
+func (I *Inequalities) evaluate(listVar []Variable, varValues []float64) bool {
+	for _, inequality := range I.inequalities {
+		if inequality.evaluate(listVar, varValues) == false {
+			return false
+		}
+	}
+	return true
+}
+
+func (I *Inequality) innit() {
 	I.left.expression = ""
 	I.right.expression = ""
 
@@ -56,8 +70,6 @@ func (I *Ineq) innit() {
 		I.left, I.right = I.right, I.left
 	}
 
-	println("Banane\n")
-
 	I.left.innit()
 	I.right.innit()
 }
@@ -68,7 +80,6 @@ func (O *Operation) innit() {
 	ind := findIndexOfChar(substring, '(')
 	ind2 := findLastIndexOfChar(substring, ')')
 
-	println(ind, ind2)
 	if ind == 0 && ind2 == len(substring)-1 {
 		O.elements = append(O.elements, Operation{expression: substring[1 : len(substring)-1]})
 		O.operator = '('
@@ -90,7 +101,6 @@ func (O *Operation) innit() {
 					break
 				} else {
 					sub = O.expression[currentOpIndex+1:]
-					println(sub, "\n")
 					find := findIndexOfChar(sub, currentOp)
 					if find == -1 {
 						currentOpIndex = -1
@@ -131,8 +141,6 @@ func (O *Operation) innit() {
 
 func (O *Operation) getValue(listVar []Variable, varValues []float64) float64 {
 
-	println(O.expression)
-
 	if O.operator == 'n' {
 		floatValue, err := strconv.ParseFloat(O.expression, 64)
 		if err == nil {
@@ -163,7 +171,6 @@ func (O *Operation) getValue(listVar []Variable, varValues []float64) float64 {
 			return O.elements[0].getValue(listVar, varValues)
 		}
 	}
-	println("TA MERE", O.operator, O.expression)
 	return 0
 }
 
@@ -230,6 +237,25 @@ func initializeVariables(file *os.File) ([]Variable, error) {
 	}
 }
 
+func initializeInequalities(file *os.File) (Inequalities, error) {
+	scanner := bufio.NewScanner(file)
+	Is := Inequalities{}
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) > 0 && line[0] == '#' {
+			if countCharInString(line, '<')+countCharInString(line, '>') == 1 {
+				Is.inequalities = append(Is.inequalities, Inequality{str: line[1:]})
+			}
+		}
+	}
+
+	for i := range Is.inequalities {
+		Is.inequalities[i].innit()
+	}
+
+	return Is, nil
+}
+
 func findVariableIndex(listVar []Variable, name string) int {
 	for i, V := range listVar {
 		if V.name == name {
@@ -240,7 +266,6 @@ func findVariableIndex(listVar []Variable, name string) int {
 }
 
 func findIndexOfChar(str string, charR rune) int {
-	println(str, "\n")
 	for i, char := range str {
 		if char == charR {
 			return i
@@ -258,4 +283,15 @@ func findLastIndexOfChar(str string, charR rune) int {
 		}
 	}
 	return lastIndex
+}
+
+func countCharInString(str string, char rune) int {
+	out := 0
+	for _, v := range str {
+		if v == char {
+			out += 1
+		}
+	}
+
+	return out
 }
