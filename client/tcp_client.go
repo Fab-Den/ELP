@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net"
-	"time"
+	"os"
+	// "time"
 )
 
 func main() {
@@ -15,13 +17,80 @@ func main() {
 	}
 	defer conn.Close()
 
+	var input string
+	var choice string
+	var str string
+	//Ask the user if he has an input file ready
+	fmt.Print("Do you have an input file? [y/n] ")
+	scanner_choice := bufio.NewScanner(os.Stdin)
+	if scanner_choice.Scan() {
+		choice = scanner_choice.Text()
+	}
+	//if yes, ask for the path, retrieve it open the file and reads it
+	if choice == "y" || choice == "Y" {
+		fmt.Println("Enter file path: ")
+		scanner_file := bufio.NewScanner(os.Stdin)
+		if scanner_file.Scan() {
+			file_path := scanner_file.Text()
+			fmt.Println(file_path)
+			input = file_reading(file_path)
+		}
+		// if not, ask the user to directly submit the data
+	} else if choice == "N" || choice == "n" {
+		fmt.Println("Enter your data: ")
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			line := scanner.Text()
+
+			if line == "" {
+				break
+			}
+			input += line + "\n"
+		}
+
+		if err := scanner.Err(); err != nil {
+			fmt.Println("Error reading input:", err)
+			return
+		}
+	}
+	// if the input, from the file or the console, is empty then return an error
+	if input == "" || input == "error" {
+		fmt.Println("Error in your data, unable to send")
+		//else add an identification sequence at the end of the string
+	} else {
+		str = input + "end"
+		fmt.Println(str)
+	}
+
 	// Send data to the server
-	data := []byte("x y\n~x->-1:1\n~y->-1:1\n#x*x+y*y<1\n")
+	data := []byte(str)
 	_, err = conn.Write(data)
-	_, err = conn.Write([]byte("end"))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	time.Sleep(10000000000000)
+}
+
+func file_reading(path string) string {
+	var str string
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		return "error"
+	}
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		str += line + "\n"
+	}
+
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+
+		}
+	}(file)
+
+	return str
 }
