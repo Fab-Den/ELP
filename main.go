@@ -41,13 +41,13 @@ func main() {
 	}
 
 	_, err = file.Seek(0, 0)
-	inequalities, err := initializeInequalities(file)
+	inequalities, err := monte_carlo.initializeInequalities(file)
 
 	N := 10000000
 
 	for i := 1; i < 20; i++ {
 		timeStart := time.Now()
-		println(parallelization(listVar, N, i, inequalities))
+		println(main2.parallelization(listVar, N, i, inequalities))
 		println("Execution time for ", N, " points over ", i, " go routines : ", time.Since(timeStart)/time.Millisecond, "ms")
 	}
 
