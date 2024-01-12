@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 )
 
 func randomFloat(min, max float64) float64 {
@@ -20,36 +21,68 @@ func generatePoint(listVar []Variable, input_chan chan []float64, N int) {
 		}
 		input_chan <- point
 	}
+
+	close(input_chan)
+
 }
 
-func parallelisation(listVar []Variable, N int, nb_goroutine int) {
+func parallelisation(listVar []Variable, N int, nb_goroutine int, I Inequalities) {
+	var wg sync.WaitGroup
+
 	input_chan := make(chan []float64, 10)
 	res_chan := make(chan bool, 10)
+	doneChannel := make(chan bool, 1)
+
 	go generatePoint(listVar, input_chan, N)
+	go recoverData(res_chan, doneChannel)
 
 	for i := 0; i <= nb_goroutine; i++ {
-		go worker(input_chan, res_chan)
+		wg.Add(1)
+		go worker(input_chan, res_chan, listVar, I, &wg)
 	}
-	recoverData(res_chan, N)
 
+	wg.Wait()
+
+	close(res_chan)
+
+	<-doneChannel
 }
 
-func worker(input_chan chan []float64, res_chan chan bool) {
-	point := <-input_chan
-	res := false
-	if point[0] < 0 {
-		res = true
-	}
-	res_chan <- res
-	go worker(input_chan, res_chan)
-}
+func worker(input_chan <-chan []float64, res_chan chan<- bool, listVar []Variable, I Inequalities, wg *sync.WaitGroup) {
+	defer wg.Done()
 
-func recoverData(res_chan chan bool, N int) {
-	res := 0
-	for i := 0; i < N; i++ {
-		if <-res_chan {
-			res += 1
+	for {
+		// get entry value
+		point, more := <-input_chan
+		if !more {
+			// if channel close then quit
+			return
 		}
+		res_chan <- I.evaluate(listVar, point)
 	}
-	fmt.Println(float64(res) / float64(N))
+}
+
+func recoverData(res_chan chan bool, doneChannel chan<- bool) {
+
+	res := float64(0)
+	c := 0
+
+	for {
+		data, more := <-res_chan
+		if !more {
+			fmt.Println(float64(res))
+
+			doneChannel <- true
+			return
+		}
+
+		if data {
+			res = (res*float64(c) + 1) / (float64(c) + 1)
+		} else {
+			res = (res * float64(c)) / (float64(c) + 1)
+		}
+		c += 1
+
+	}
+
 }
