@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
@@ -39,13 +40,15 @@ func main() {
 		}
 	}
 
-	for _, V := range listVar {
-		println(V.name, V.ran[0], V.ran[1])
-	}
-
 	_, err = file.Seek(0, 0)
 	inequalities, err := initializeInequalities(file)
 
-	println(inequalities.evaluate(listVar, []float64{0.45, 0.45}))
-	parallelisation(listVar, 100000000, 10, inequalities)
+	N := 10000000
+
+	for i := 1; i < 20; i++ {
+		timeStart := time.Now()
+		println(parallelization(listVar, N, i, inequalities))
+		println("Execution time for ", N, " points over ", i, " go routines : ", time.Since(timeStart)/time.Millisecond, "ms")
+	}
+
 }
