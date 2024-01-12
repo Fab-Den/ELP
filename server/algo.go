@@ -34,7 +34,7 @@ func worker(mainInputChannel <-chan mainInputContainer) {
 				point = append(point, randomFloat(variable.ran[0], variable.ran[1]))
 			}
 
-			if element.inequalities.evaluate(element.listVar, point) == true {
+			if element.inequalities.evaluate(element.listVar, point) {
 				total += 1
 			}
 		}

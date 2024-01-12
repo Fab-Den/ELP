@@ -38,7 +38,7 @@ func (I *Inequality) evaluate(listVar []Variable, varValues []float64) bool {
 
 func (I *Inequalities) evaluate(listVar []Variable, varValues []float64) bool {
 	for _, inequality := range I.inequalities {
-		if inequality.evaluate(listVar, varValues) == false {
+		if !inequality.evaluate(listVar, varValues) {
 			return false
 		}
 	}

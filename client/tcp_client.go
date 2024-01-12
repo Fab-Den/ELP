@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 )
 
 func main() {
@@ -74,17 +73,15 @@ func main() {
 
 		var rec []byte
 		buffer := make([]byte, 1024)
-		for !strings.Contains(string(rec), "end") {
-			// Read data from the server
-			n, err := conn.Read(buffer)
-			if err != nil {
-				fmt.Println("Error reading:", err)
-				return
-			}
-
-			rec = append(rec, buffer[:n]...)
+		// Read data from the server
+		n, err := conn.Read(buffer)
+		if err != nil {
+			fmt.Println("Error reading:", err)
+			return
 		}
-		fmt.Println(rec)
+		rec = append(rec, buffer[:n]...)
+
+		fmt.Println(string(rec))
 	}
 }
 
