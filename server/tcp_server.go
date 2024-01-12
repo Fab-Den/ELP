@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -74,8 +75,10 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 		result := <-resultChannel
 		close(resultChannel)
 		close(outChannel)
+		volume := getSpaceVolume(listVar)
 
-		println(result)
+		final := result * volume
+		conn.Write([]byte(strconv.FormatFloat(final, 'f', -1, 64)))
 	}
 
 }

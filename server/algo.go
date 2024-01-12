@@ -20,25 +20,6 @@ func randomFloat(min, max float64) float64 {
 	return min + rand.Float64()*(max-min)
 }
 
-//func parallelization(listVar []Variable, N int, nbGoroutine int, I Inequalities) float64 {
-//	var wgWorkers sync.WaitGroup
-//
-//	resultChannel := make(chan bool, 10)
-//	doneChannel := make(chan float64, 1)
-//
-//	go recoverData(resultChannel, doneChannel)
-//
-//	for i := 0; i <= nbGoroutine; i++ {
-//		wgWorkers.Add(1)
-//		go worker(N/nbGoroutine, resultChannel, listVar, I, &wgWorkers)
-//	}
-//
-//	wgWorkers.Wait()
-//	close(resultChannel)
-//
-//	return <-doneChannel
-//}
-
 func worker(mainInputChannel <-chan mainInputContainer) {
 	for {
 		element := <-mainInputChannel
@@ -58,29 +39,6 @@ func worker(mainInputChannel <-chan mainInputContainer) {
 			}
 		}
 		element.outputChannel <- subOutputContainer{N: element.N, value: total}
-	}
-}
-
-func recoverData(resultChannel chan bool, doneChannel chan<- float64) {
-
-	res := float64(0)
-	c := 0
-
-	for {
-		data, more := <-resultChannel
-
-		if !more {
-			doneChannel <- res
-			return
-		}
-
-		if data {
-			res = (res*float64(c) + 1) / (float64(c) + 1)
-		} else {
-			res = (res * float64(c)) / (float64(c) + 1)
-		}
-		c += 1
-
 	}
 }
 

@@ -262,6 +262,18 @@ func getNumberOfPoints(str string) int {
 	return 0
 }
 
+func getSpaceVolume(listVars []Variable) float64 {
+	var total float64
+	total = 1
+
+	for _, variable := range listVars {
+		total *= variable.ran[1] - variable.ran[0]
+	}
+
+	return total
+
+}
+
 func initVariableRange(listVar []Variable, str string) error {
 
 	for i := range listVar {
