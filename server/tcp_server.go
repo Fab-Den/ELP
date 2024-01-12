@@ -13,16 +13,24 @@ func handleConnection(conn net.Conn) {
 		}
 	}(conn)
 
-	data := ""
+	var data []byte
 
-	// Read data from the client
 	buffer := make([]byte, 1024)
+	for {
+		// Read data from the client
 
-	_, err := conn.Read(buffer)
+		n, err := conn.Read(buffer)
+		if err != nil {
+			fmt.Println("Error reading:", err)
+			return
+		}
 
-	if err != nil {
-		fmt.Println("Error reading:", err)
-		return
+		data = append(data, buffer[:n]...)
+
+		if n == 0 {
+			break
+		}
+
 	}
 
 	// Print the data received from the client
@@ -55,4 +63,8 @@ func acceptTcpConnections() {
 
 	}
 
+}
+
+func main() {
+	acceptTcpConnections()
 }
