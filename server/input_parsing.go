@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -174,13 +172,13 @@ func (O *Operation) getValue(listVar []Variable, varValues []float64) float64 {
 	return 0
 }
 
-func (V *Variable) setVariableRange(file *os.File) error {
+func (V *Variable) setVariableRange(str string) error {
 
-	scanner := bufio.NewScanner(file)
+	lines := strings.Split(str, "\n")
+
 	rangeLine := ""
 
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range lines {
 
 		if len(line) > len(V.name)+3 {
 			if line[0:len(V.name)+1] == "~"+V.name {
@@ -214,34 +212,26 @@ func (V *Variable) setVariableRange(file *os.File) error {
 	return nil
 }
 
-func initializeVariables(file *os.File) ([]Variable, error) {
+func initializeVariables(str string) ([]Variable, error) {
 
 	var listOfVariables []Variable
 
-	scanner := bufio.NewScanner(file)
+	lines := strings.Split(str, "\n")
 
-	if scanner.Scan() {
-		text := scanner.Text()
-		names := strings.Split(text, " ")
+	names := strings.Split(lines[0], " ")
 
-		for _, value := range names {
-			listOfVariables = append(listOfVariables, Variable{name: value})
-		}
-
-		return listOfVariables, nil
-
-	} else if err := scanner.Err(); err != nil {
-		return listOfVariables, err
-	} else {
-		return listOfVariables, fmt.Errorf("empty file")
+	for _, value := range names {
+		listOfVariables = append(listOfVariables, Variable{name: value})
 	}
+
+	return listOfVariables, nil
 }
 
-func initializeInequalities(file *os.File) (Inequalities, error) {
-	scanner := bufio.NewScanner(file)
+func initializeInequalities(str string) (Inequalities, error) {
+	lines := strings.Split(str, "\n")
+
 	Is := Inequalities{}
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range lines {
 		if len(line) > 0 && line[0] == '#' {
 			if countCharInString(line, '<')+countCharInString(line, '>') == 1 {
 				Is.inequalities = append(Is.inequalities, Inequality{str: line[1:]})
@@ -254,6 +244,46 @@ func initializeInequalities(file *os.File) (Inequalities, error) {
 	}
 
 	return Is, nil
+}
+
+func getNumberOfPoints(str string) int {
+	lines := strings.Split(str, "\n")
+	for _, line := range lines {
+		if strings.Contains(line, "N=") {
+			value, err := strconv.Atoi(line[2:])
+			if err != nil {
+				fmt.Println("Error converting string to int:", err)
+				return 0
+			}
+
+			return value
+		}
+	}
+	return 0
+}
+
+func getSpaceVolume(listVars []Variable) float64 {
+	var total float64
+	total = 1
+
+	for _, variable := range listVars {
+		total *= variable.ran[1] - variable.ran[0]
+	}
+
+	return total
+
+}
+
+func initVariableRange(listVar []Variable, str string) error {
+
+	for i := range listVar {
+		err := listVar[i].setVariableRange(str)
+
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func findVariableIndex(listVar []Variable, name string) int {
