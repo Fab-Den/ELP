@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
 func handleConnection(conn net.Conn) {
@@ -16,7 +17,7 @@ func handleConnection(conn net.Conn) {
 	var data []byte
 
 	buffer := make([]byte, 1024)
-	for {
+	for !strings.Contains(string(data), "end") {
 		// Read data from the client
 
 		n, err := conn.Read(buffer)
@@ -26,20 +27,16 @@ func handleConnection(conn net.Conn) {
 		}
 
 		data = append(data, buffer[:n]...)
-
-		if n == 0 {
-			break
-		}
-
 	}
 
+	problem := string(data)
 	// Print the data received from the client
-	fmt.Println("Data received from client:", string(buffer))
+	fmt.Println("Data received from client:", problem)
 }
 
 func acceptTcpConnections() {
 
-	ln, err := net.Listen("tcp", ":8000")
+	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		fmt.Println("Error listening:", err)
 		return
@@ -62,7 +59,6 @@ func acceptTcpConnections() {
 		go handleConnection(conn)
 
 	}
-
 }
 
 func main() {
