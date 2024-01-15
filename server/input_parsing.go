@@ -6,36 +6,6 @@ import (
 	"strings"
 )
 
-// Variable is used to represent a variable from the formulas given in input. The structure is used to associate
-// the variable to the range.
-type Variable struct {
-	name string
-	ran  [2]float64
-}
-
-// Inequalities is a simple structure to make simpler the argument passing and the evaluation of the inequalities
-type Inequalities struct {
-	inequalities []Inequality
-}
-
-// Inequality represents one formula given in input. It stores the two members of the inequality. The left member is
-// lower than the right member.
-type Inequality struct {
-	str   string
-	left  Operation
-	right Operation
-}
-
-// Operation stores an operation from the formula. The expression attribute is the string associated to the operation.
-// Operator is a character to know which mathematical operation is associated. The 'n' value in this attribute
-// represents the fact that there is not an operation to carry out, and the object represents then a single value.
-// As an operation is carried out between two members, the elements attribute can store two other Operation structure.
-type Operation struct {
-	expression string
-	operator   rune
-	elements   []Operation
-}
-
 // evaluate is a method for the Inequality structure, which is called when we want to know if the inequality is
 // respected according to the values of variables given in parameters.
 func (I *Inequality) evaluate(listVar []Variable, varValues []float64) bool {
@@ -47,10 +17,10 @@ func (I *Inequality) evaluate(listVar []Variable, varValues []float64) bool {
 	}
 }
 
-// evaluate is a method for Inequalities that calls evaluate for each Inequality. Returns if all the inequalities
+// evaluate is a method for Problem that calls evaluate for each Inequality. Returns if all the inequalities
 // are respected.
-func (I *Inequalities) evaluate(listVar []Variable, varValues []float64) bool {
-	for _, inequality := range I.inequalities {
+func (P *Problem) evaluate(listVar []Variable, varValues []float64) bool {
+	for _, inequality := range P.inequalities {
 		if !inequality.evaluate(listVar, varValues) {
 			return false
 		}
@@ -149,7 +119,6 @@ func (O *Operation) init() {
 			if len(O.expression) != 0 {
 				O.elements = append(O.elements, newO)
 			}
-
 		}
 	}
 
@@ -256,44 +225,41 @@ func initializeVariables(str string) ([]Variable, error) {
 	return listOfVariables, nil
 }
 
-// initializeInequalities returns an Inequalities object (list of Inequality) according to the input string. Also, it
-// calls the init method for each Inequality instance.
-func initializeInequalities(str string) (Inequalities, error) {
+// initInequalities is a method for Problem that edit the inequalities list according to the input string.
+// Also, it calls the init method for each Inequality instance.
+func (P *Problem) initInequalities(str string) error {
 	lines := strings.Split(str, "\n")
 
-	Is := Inequalities{}
 	for _, line := range lines {
 		if len(line) > 0 && line[0] == '#' {
 			if countCharInString(line, '<')+countCharInString(line, '>') == 1 {
-				Is.inequalities = append(Is.inequalities, Inequality{str: line[1:]})
+				P.inequalities = append(P.inequalities, Inequality{str: line[1:]})
 			} else {
-				return Is, fmt.Errorf("bad number of inequality symbol into at least one formula")
+				return fmt.Errorf("bad number of inequality symbol into at least one formula")
 			}
 		}
 	}
 
-	for i := range Is.inequalities {
-		Is.inequalities[i].init()
+	for i := range P.inequalities {
+		P.inequalities[i].init()
 	}
 
-	return Is, nil
+	return nil
 }
 
 // getNumberOfPoints is a function that gets the number of points requested in the input file and returns the value.
-func getNumberOfPoints(str string) int {
+func getNumberOfPoints(str string) (int, error) {
 	lines := strings.Split(str, "\n")
 	for _, line := range lines {
 		if strings.Contains(line, "N=") {
 			value, err := strconv.Atoi(line[2:])
 			if err != nil {
-				fmt.Println("Error converting string to int:", err)
-				return 0
+				return 0, fmt.Errorf("error when reading number of points : %s", err)
 			}
-
-			return value
+			return value, nil
 		}
 	}
-	return 0
+	return 0, fmt.Errorf("error when reading number of points : could not find number of points in data")
 }
 
 // getSpaceVolume is a function that returns the total volume of the space, according to the range of each variable.
@@ -378,11 +344,54 @@ func (O *Operation) getOperationSize() int {
 	return total
 }
 
-// getProblemSize is a method for Inequalities that calculates the total number of operations among all inequalities.
-func (I *Inequalities) getProblemSize() int {
+// getProblemSize is a method for Problem that calculates the total number of operations among all inequalities.
+func (P *Problem) getProblemSize() int {
 	total := 0
-	for _, i := range I.inequalities {
+	for _, i := range P.inequalities {
 		total += i.left.getOperationSize() + i.right.getOperationSize() + 1
 	}
 	return total
+}
+
+func (O *Operation) checkData(listVar []Variable) error {
+	if O.operator == 'n' {
+		inVars := false
+
+		for _, varName := range listVar {
+			if varName.name == O.expression {
+				inVars = true
+				break
+			}
+		}
+
+		if inVars == false {
+			_, err := strconv.ParseFloat(O.expression, 64)
+
+			if err != nil {
+				return fmt.Errorf("bad char in formula : %s", O.expression)
+			}
+		}
+
+	}
+	return nil
+}
+
+func (P *Problem) checkData() error {
+	var err error
+
+	for _, i := range P.inequalities {
+
+		err = i.left.checkData(P.listVars)
+		if err != nil {
+			return err
+		}
+
+		err = i.right.checkData(P.listVars)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	return nil
 }

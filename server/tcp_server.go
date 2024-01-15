@@ -10,7 +10,40 @@ import (
 
 const numberWorkers = 12
 
+func createProblem(str string) (Problem, error) {
+	var err error
+	var problem Problem
+
+	problem.listVars, err = initializeVariables(str)
+	if err != nil {
+		return problem, err
+	}
+
+	err = initVariableRange(problem.listVars, str)
+	if err != nil {
+		return problem, err
+	}
+
+	err = problem.initInequalities(str)
+	if err != nil {
+		return problem, err
+	}
+
+	err = problem.checkData()
+	if err != nil {
+		return problem, err
+	}
+
+	problem.numberOfPoints, err = getNumberOfPoints(str)
+	if err != nil {
+		return problem, err
+	}
+
+	return problem, nil
+}
+
 func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer) {
+
 	defer func(conn net.Conn) {
 		err := conn.Close()
 		if err != nil {
@@ -18,7 +51,10 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 		}
 	}(conn)
 	for {
+		var err error
+		err = nil
 
+		// Read data input
 		var data []byte
 
 		buffer := make([]byte, 1024)
@@ -34,59 +70,55 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 			data = append(data, buffer[:n]...)
 		}
 
-		problem := string(data)
-		println(conn.RemoteAddr().String())
+		problemString := string(data)
 
-		listVar, err := initializeVariables(problem)
+		var problem Problem
+		problem, err = createProblem(problemString)
+
 		if err != nil {
-			return
-		}
+			_, errWrite := conn.Write([]byte(err.Error()))
+			if errWrite != nil {
+				println("Error sending error to ", conn.RemoteAddr(), " : ", errWrite)
+			}
+		} else {
 
-		err = initVariableRange(listVar, problem)
-		if err != nil {
-			return
-		}
+			baseMaxN := 10000
 
-		inequalities, err := initializeInequalities(problem)
+			maxN := baseMaxN / problem.getProblemSize()
 
-		N := getNumberOfPoints(problem)
-		if N == 0 {
-			return
-		}
+			outChannel := make(chan subOutputContainer, 30)
+			resultChannel := make(chan float64, 3)
 
-		baseMaxN := 10000
+			N := problem.numberOfPoints
 
-		maxN := baseMaxN / inequalities.getProblemSize()
+			go receiveDataForRequest(outChannel, resultChannel, N)
 
-		println("MAXN : ", maxN)
+			for N > 0 {
+				tempN := 0
 
-		outChannel := make(chan subOutputContainer, 30)
-		resultChannel := make(chan float64, 3)
+				if N < maxN {
+					tempN = N
+				} else {
+					tempN = maxN
+				}
 
-		go receiveDataForRequest(outChannel, resultChannel, N)
+				N = N - tempN
 
-		for N > 0 {
-			tempN := 0
+				mainInputChannel <- mainInputContainer{problem: problem, outputChannel: outChannel, N: tempN}
 
-			if N < maxN {
-				tempN = N
-			} else {
-				tempN = maxN
 			}
 
-			N = N - tempN
+			result := <-resultChannel
+			close(resultChannel)
+			close(outChannel)
+			volume := getSpaceVolume(problem.listVars)
 
-			mainInputChannel <- mainInputContainer{listVar: listVar, inequalities: inequalities, outputChannel: outChannel, N: tempN}
-
+			final := result * volume
+			_, errWrite := conn.Write([]byte(strconv.FormatFloat(final, 'f', -1, 64)))
+			if errWrite != nil {
+				println("Error sending result to ", conn.RemoteAddr(), " : ", errWrite)
+			}
 		}
-
-		result := <-resultChannel
-		close(resultChannel)
-		close(outChannel)
-		volume := getSpaceVolume(listVar)
-
-		final := result * volume
-		conn.Write([]byte(strconv.FormatFloat(final, 'f', -1, 64)))
 	}
 
 }

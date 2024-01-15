@@ -5,8 +5,7 @@ import (
 )
 
 type mainInputContainer struct {
-	listVar       []Variable
-	inequalities  Inequalities
+	problem       Problem
 	outputChannel chan subOutputContainer
 	N             int
 }
@@ -29,12 +28,12 @@ func worker(mainInputChannel <-chan mainInputContainer) {
 			// Generates a point with random coordinates
 			// all coordinates are kept in the range defined in the input file
 			var point []float64
-			for i := 0; i < len(element.listVar); i++ {
-				variable := element.listVar[i]
+			for i := 0; i < len(element.problem.listVars); i++ {
+				variable := element.problem.listVars[i]
 				point = append(point, randomFloat(variable.ran[0], variable.ran[1]))
 			}
 
-			if element.inequalities.evaluate(element.listVar, point) {
+			if element.problem.evaluate(element.problem.listVars, point) {
 				total += 1
 			}
 		}
