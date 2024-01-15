@@ -5,7 +5,10 @@ import (
 	"net"
 	"strconv"
 	"strings"
+	"time"
 )
+
+const numberWorkers = 12
 
 func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer) {
 	defer func(conn net.Conn) {
@@ -32,7 +35,8 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 		}
 
 		problem := string(data)
-		println(problem)
+		println(conn.RemoteAddr().String())
+
 		listVar, err := initializeVariables(problem)
 		if err != nil {
 			return
@@ -50,7 +54,11 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 			return
 		}
 
-		maxN := 1000
+		baseMaxN := 10000
+
+		maxN := baseMaxN / inequalities.getProblemSize()
+
+		println("MAXN : ", maxN)
 
 		outChannel := make(chan subOutputContainer, 30)
 		resultChannel := make(chan float64, 3)
@@ -83,15 +91,7 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 
 }
 
-func acceptTcpConnections() {
-
-	mainInputChannel := make(chan mainInputContainer, 42)
-
-	numberWorkers := 12
-
-	for i := 0; i < numberWorkers; i++ {
-		go worker(mainInputChannel)
-	}
+func acceptTcpConnections(mainInputChannel chan<- mainInputContainer, stopEvent <-chan bool) {
 
 	ln, err := net.Listen("tcp", ":8080")
 	if err != nil {
@@ -107,18 +107,42 @@ func acceptTcpConnections() {
 	}(ln)
 
 	for {
-		conn, err := ln.Accept()
-		if err != nil {
-			fmt.Println("Error accepting connection:", err)
-			continue
-		}
+		select {
+		case <-stopEvent:
+			return
 
-		go handleConnection(conn, mainInputChannel)
+		default:
+			// set a timeout to loop on the select if there is no connection attempt
+			err := ln.(*net.TCPListener).SetDeadline(time.Now().Add(1 * time.Second))
+
+			conn, err := ln.Accept()
+
+			if err != nil {
+				if !err.(net.Error).Timeout() {
+					fmt.Println("Error accepting connection:", err)
+				}
+				continue
+			}
+
+			go handleConnection(conn, mainInputChannel)
+		}
 
 	}
 }
 
 func main() {
+	stopServerChannel := make(chan bool, 1)
 
-	acceptTcpConnections()
+	mainInputChannel := make(chan mainInputContainer, 42)
+
+	for i := 0; i < numberWorkers; i++ {
+		go worker(mainInputChannel)
+	}
+
+	go acceptTcpConnections(mainInputChannel, stopServerChannel)
+
+	select {}
+
+	//close(stopServerChannel)
+
 }

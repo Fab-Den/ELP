@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"time"
 )
 
 func main() {
@@ -71,6 +72,8 @@ func main() {
 			fmt.Println("Error:", err)
 		}
 
+		timeStart := time.Now()
+
 		var rec []byte
 		buffer := make([]byte, 1024)
 		// Read data from the server
@@ -82,6 +85,9 @@ func main() {
 		rec = append(rec, buffer[:n]...)
 
 		fmt.Println(string(rec))
+
+		println("Execution time for :", time.Since(timeStart)/time.Millisecond, "ms")
+
 	}
 }
 

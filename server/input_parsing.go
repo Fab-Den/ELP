@@ -266,6 +266,8 @@ func initializeInequalities(str string) (Inequalities, error) {
 		if len(line) > 0 && line[0] == '#' {
 			if countCharInString(line, '<')+countCharInString(line, '>') == 1 {
 				Is.inequalities = append(Is.inequalities, Inequality{str: line[1:]})
+			} else {
+				return Is, fmt.Errorf("bad number of inequality symbol into at least one formula")
 			}
 		}
 	}
@@ -364,4 +366,23 @@ func countCharInString(str string, char rune) int {
 	}
 
 	return out
+}
+
+// getOperationSize is a method for Operation that returns the number of operations that the object contains. A single
+// value count as 1 operation.
+func (O *Operation) getOperationSize() int {
+	total := 1
+	for _, o := range O.elements {
+		total += o.getOperationSize()
+	}
+	return total
+}
+
+// getProblemSize is a method for Inequalities that calculates the total number of operations among all inequalities.
+func (I *Inequalities) getProblemSize() int {
+	total := 0
+	for _, i := range I.inequalities {
+		total += i.left.getOperationSize() + i.right.getOperationSize() + 1
+	}
+	return total
 }
