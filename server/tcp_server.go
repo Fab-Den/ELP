@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"net"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
 )
-
-const numberWorkers = 12
 
 func createProblem(str string) (Problem, error) {
 	var err error
@@ -167,7 +166,7 @@ func main() {
 
 	mainInputChannel := make(chan mainInputContainer, 42)
 
-	for i := 0; i < numberWorkers; i++ {
+	for i := 0; i < runtime.NumCPU(); i++ {
 		go worker(mainInputChannel)
 	}
 
