@@ -159,8 +159,11 @@ checkGuess : Model -> Html Msg
 checkGuess model =
     if model.input == model.current_word then
         div [ style "color" "green"] [ text ("You found the word \""++model.current_word++"\" !")]
-    else 
+    else if model.input /= "" then
         div [ style "color" "red"] [ text "Not quite there yet"]
+    else
+        div [] []
+
 
 displayWord : Model -> Html Msg
 displayWord model =
