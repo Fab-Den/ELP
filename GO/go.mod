@@ -1,6 +1,6 @@
 module main
 
-go 1.22
+go 1.21.6
 
 require (
 	github.com/dixonwille/wlog v2.0.0+incompatible
