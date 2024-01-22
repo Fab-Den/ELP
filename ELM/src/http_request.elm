@@ -40,14 +40,14 @@ type alias Definition =
 
 init_model = {state = Success
     , definition = []
-    , word_list = ["hello", "blue", "submarine", "forest"]
+    , word_list = ["hello", "blue", "submarine", "forest","computer"]
     , current_word = ""
     , random_index = 0}
 init : () -> (Model, Cmd Msg)
 init _ =
     (init_model
     , Http.get
-          { url = "https://perso.liris.cnrs.fr/tristan.roussillon/GuessIt/thousand_words_things_explainer.txt"
+          { url = "../static/words.txt"--"https://perso.liris.cnrs.fr/tristan.roussillon/GuessIt/thousand_words_things_explainer.txt"
           , expect = Http.expectString GotText
           }
     )
@@ -132,8 +132,8 @@ viewQuote model =
 
         Success  -> 
             div []
-            [ div [] (List.map displayDefinition model.definition)
-            , h1 [] [ text (model.current_word)]
+            [ h3 [] [ text (model.current_word)]
+            , div [] (List.map displayDefinition model.definition)
             , button [ onClick Roll ] [ text "Roll" ]
             ]
 
