@@ -353,6 +353,7 @@ func (P *Problem) getProblemSize() int {
 	return total
 }
 
+// checkData is a method for Operation that checks if the expression int the Operation is either a variable or a float
 func (O *Operation) checkData(listVar []Variable) error {
 	if O.operator == 'n' {
 		inVars := false
@@ -376,6 +377,7 @@ func (O *Operation) checkData(listVar []Variable) error {
 	return nil
 }
 
+// checkData is a method for Problem that calls checkData of Operation of both side of inequalities
 func (P *Problem) checkData() error {
 	var err error
 
