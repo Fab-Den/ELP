@@ -9,19 +9,26 @@ import (
 )
 
 const defaultPort = "8080"
+const experimentMode = false
+const defaultFile = ""
 
 func main() {
 	var conn net.Conn
 	var err error
 
 	for {
-		fmt.Println("Server address : ")
-		addressChoice := bufio.NewScanner(os.Stdin)
+		if experimentMode == false {
+			fmt.Println("Server address : ")
+			addressChoice := bufio.NewScanner(os.Stdin)
 
-		addressChoice.Scan()
+			addressChoice.Scan()
 
-		// Connect to the server
-		conn, err = net.Dial("tcp", addressChoice.Text()+":"+defaultPort)
+			// Connect to the server
+			conn, err = net.Dial("tcp", addressChoice.Text()+":"+defaultPort)
+		} else {
+			conn, err = net.Dial("tcp", "127.0.0.1"+":"+defaultPort)
+		}
+
 		if err != nil {
 			fmt.Println("Error:", err)
 		} else {
@@ -43,21 +50,30 @@ func main() {
 		var str string
 
 		for {
-			//Ask the user if he has an input file ready
-			fmt.Print("Do you have an input file? [y/n] ")
-			scannerChoice := bufio.NewScanner(os.Stdin)
-			if scannerChoice.Scan() {
-				choice = scannerChoice.Text()
+			if experimentMode == false {
+				//Ask the user if he has an input file ready
+				fmt.Print("Do you have an input file? [y/n] ")
+				scannerChoice := bufio.NewScanner(os.Stdin)
+				if scannerChoice.Scan() {
+					choice = scannerChoice.Text()
+				}
+			} else {
+				choice = "y"
 			}
 
 			//if yes, ask for the path, retrieve it open the file and reads it
 			if choice == "y" || choice == "Y" {
-				fmt.Println("Enter file path: ")
-				scannerFile := bufio.NewScanner(os.Stdin)
-				if scannerFile.Scan() {
-					filePath := scannerFile.Text()
-					fmt.Println(filePath)
-					input = fileReading(filePath)
+
+				if experimentMode == false {
+					fmt.Println("Enter file path: ")
+					scannerFile := bufio.NewScanner(os.Stdin)
+					if scannerFile.Scan() {
+						filePath := scannerFile.Text()
+						fmt.Println(filePath)
+						input = fileReading(filePath)
+					}
+				} else {
+					input = fileReading(defaultFile)
 				}
 
 				// if not, ask the user to directly submit the data
@@ -89,28 +105,31 @@ func main() {
 				fmt.Println(str)
 			}
 
-			// Send data to the server
-			data := []byte(str)
-			_, err = conn.Write(data)
-			if err != nil {
-				fmt.Println("Error:", err)
+			for i := 0; i < 10; i++ {
+				// Send data to the server
+				data := []byte(str)
+				_, err = conn.Write(data)
+				if err != nil {
+					fmt.Println("Error:", err)
+				}
+
+				timeStart := time.Now()
+
+				var rec []byte
+				buffer := make([]byte, 1024)
+				// Read data from the server
+				n, err := conn.Read(buffer)
+				if err != nil {
+					fmt.Println("Error reading:", err)
+					return
+				}
+				rec = append(rec, buffer[:n]...)
+
+				fmt.Println(string(rec))
+
+				println("Execution time for :", time.Since(timeStart)/time.Millisecond, "ms")
+
 			}
-
-			timeStart := time.Now()
-
-			var rec []byte
-			buffer := make([]byte, 1024)
-			// Read data from the server
-			n, err := conn.Read(buffer)
-			if err != nil {
-				fmt.Println("Error reading:", err)
-				return
-			}
-			rec = append(rec, buffer[:n]...)
-
-			fmt.Println(string(rec))
-
-			println("Execution time for :", time.Since(timeStart)/time.Millisecond, "ms")
 
 		}
 	}

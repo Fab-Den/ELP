@@ -173,6 +173,8 @@ func main() {
 	stopServerChannel := make(chan bool, 1)
 
 	numberWorkers := runtime.NumCPU()
+	//numberWorkers := 16
+	println("Number of workers : ", numberWorkers)
 
 	mainInputChannel := make(chan mainInputContainer, numberWorkers)
 
