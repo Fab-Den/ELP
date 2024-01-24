@@ -172,9 +172,11 @@ func acceptTcpConnections(mainInputChannel chan<- mainInputContainer, stopEvent 
 func main() {
 	stopServerChannel := make(chan bool, 1)
 
-	mainInputChannel := make(chan mainInputContainer, 42)
+	numberWorkers := runtime.NumCPU()
 
-	for i := 0; i < runtime.NumCPU(); i++ {
+	mainInputChannel := make(chan mainInputContainer, numberWorkers)
+
+	for i := 0; i < numberWorkers; i++ {
 		go worker(mainInputChannel)
 	}
 
