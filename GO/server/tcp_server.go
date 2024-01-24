@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+// createProblem initialize all the variables necessary based on the input (file or user input)
+// define the variable names, their range and the inequalities defining the shape
 func createProblem(str string) (Problem, error) {
 	var err error
 	var problem Problem
@@ -41,8 +43,10 @@ func createProblem(str string) (Problem, error) {
 	return problem, nil
 }
 
+// handleConnection reads what is sent by the client, puts it in a string and pass it to createProblem
+// start a goroutine to recover the result and puts the problem in a channel
 func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer) {
-
+	//close the connection at the end
 	defer func(conn net.Conn) {
 		err := conn.Close()
 		if err != nil {
@@ -122,6 +126,8 @@ func handleConnection(conn net.Conn, mainInputChannel chan<- mainInputContainer)
 
 }
 
+// acceptTcpConnections is a function used to accept incoming tcp requests on the local network (port 8080)
+// start the handleConnection function in a goroutine
 func acceptTcpConnections(mainInputChannel chan<- mainInputContainer, stopEvent <-chan bool) {
 
 	ln, err := net.Listen("tcp", ":8080")
@@ -129,6 +135,7 @@ func acceptTcpConnections(mainInputChannel chan<- mainInputContainer, stopEvent 
 		fmt.Println("Error listening:", err)
 		return
 	}
+	//close the listener at the end
 	defer func(ln net.Listener) {
 		err := ln.Close()
 		if err != nil {
@@ -161,6 +168,7 @@ func acceptTcpConnections(mainInputChannel chan<- mainInputContainer, stopEvent 
 	}
 }
 
+// Start the pull of worker and the Tcp connection
 func main() {
 	stopServerChannel := make(chan bool, 1)
 
