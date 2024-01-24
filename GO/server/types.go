@@ -25,6 +25,7 @@ type Operation struct {
 	elements   []Operation
 }
 
+// Problem is a type that store all the information of a problem
 type Problem struct {
 	listVars       []Variable
 	inequalities   []Inequality
