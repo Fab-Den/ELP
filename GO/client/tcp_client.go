@@ -30,7 +30,7 @@ func main() {
 	}
 
 	if conn != nil {
-
+		// close the connection at the end
 		defer func(conn net.Conn) {
 			err := conn.Close()
 			if err != nil {
@@ -116,6 +116,7 @@ func main() {
 	}
 }
 
+// fileReading reads the file at the specified path and puts it in a string line by line
 func fileReading(path string) string {
 	var str string
 	file, err := os.Open(path)
