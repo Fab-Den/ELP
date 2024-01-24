@@ -4,21 +4,25 @@ import (
 	"math/rand"
 )
 
+// Type passed through the mainInputChannel
 type mainInputContainer struct {
 	problem       Problem
 	outputChannel chan subOutputContainer
 	N             int
 }
 
+// Type passed through channel between workers and result receiver
 type subOutputContainer struct {
 	N     int
 	value int
 }
 
-func randomFloat(min, max float64) float64 {
+// randomFloat is a function that generate a random number between min and max
+func randomFloat(min float64, max float64) float64 {
 	return min + rand.Float64()*(max-min)
 }
 
+// worker is a function that resolves the problem piece get from mainInputChannel
 func worker(mainInputChannel <-chan mainInputContainer) {
 	for {
 		element := <-mainInputChannel
@@ -33,6 +37,7 @@ func worker(mainInputChannel <-chan mainInputContainer) {
 				point = append(point, randomFloat(variable.ran[0], variable.ran[1]))
 			}
 
+			// Evaluate the point and increase the total if true
 			if element.problem.evaluate(element.problem.listVars, point) {
 				total += 1
 			}
@@ -41,7 +46,13 @@ func worker(mainInputChannel <-chan mainInputContainer) {
 	}
 }
 
+// receiveDataForRequest is a function that gets the results of workers from outputChannel, gathers them and send a
+// global result in a single message through resultChannel.
 func receiveDataForRequest(outputChannel <-chan subOutputContainer, resultChannel chan<- float64, N int) {
+	// N is the number of point that have to be evaluated
+	// totalN is the number of points for which we received a result
+	// totalValue is the number of points that are evaluated as true
+
 	totalN := 0
 	totalValue := 0
 	for totalN < N {
@@ -50,6 +61,7 @@ func receiveDataForRequest(outputChannel <-chan subOutputContainer, resultChanne
 		totalValue = totalValue + temp.value
 	}
 
+	// send the proportion of points that fulfill the criteria
 	resultChannel <- float64(totalValue) / float64(totalN)
 
 }
