@@ -105,7 +105,12 @@ func main() {
 				fmt.Println(str)
 			}
 
-			for i := 0; i < 10; i++ {
+			j := 1
+			if experimentMode == true {
+				j = 10
+			}
+
+			for i := 0; i < j; i++ {
 				// Send data to the server
 				data := []byte(str)
 				_, err = conn.Write(data)
