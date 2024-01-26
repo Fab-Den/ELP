@@ -5,7 +5,7 @@ const readline_interface = readline.createInterface({
     output: process.stdout
 });
 
-const draw_pile = {
+let draw_pile = {
     "A": 14,
     "B": 4,
     "C": 7,
@@ -34,15 +34,15 @@ const draw_pile = {
     "Z": 1
 };
 
-const grids = [[], []]
+let grids = [[], []]
 
-const hands= [[], []]
+let hands= [[], []]
 
-const turn = 0
+let turn = 0;
 
-const player= 1
+let player= 1
 
-const end= false
+let end= false
 
 
 function prompt(message, callback) {
@@ -50,7 +50,6 @@ function prompt(message, callback) {
         callback(a);
     })
 }
-
 
 
 // Debut du tour
