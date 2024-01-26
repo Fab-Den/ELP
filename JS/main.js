@@ -1,4 +1,11 @@
-const draw_pile = {
+const readline = require('readline');
+
+const readline_interface = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+let draw_pile = {
     "A": 14,
     "B": 4,
     "C": 7,
@@ -27,9 +34,23 @@ const draw_pile = {
     "Z": 1
 };
 
-const grids = [[], []]
+let grids = [[], []]
 
-const hands= [[], []]
+let hands= [[], []]
+
+let turn = 0;
+
+let player= 1
+
+let end= false
+
+
+function prompt(message, callback) {
+    readline_interface.question(message, (a) => {
+        callback(a);
+    })
+}
+
 
 // Debut du tour
 // 2 x Choix de Jarnac (pas le premier)
@@ -46,3 +67,14 @@ const hands= [[], []]
 //  -> passer (fin du tour)
 // pour chaque choix -> test si fin de partie
 
+
+// list functions
+// -> compter les points
+// -> tester la fin de partie
+// -> piocher lettres + retirer de la pioche
+// -> tester validité mot
+// -> modification d'une ligne
+// -> modification main (en paramètre les lettres retirées)
+// ->
+
+// ne pas oublier de fermer l'interface à la fin du jeu
