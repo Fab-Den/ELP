@@ -79,7 +79,6 @@ function updateJarnac(grids, line, turn, hands, original_word, new_word) {
         chars.push(char);
         return charToAdd;
     })
-
     ));
     
     hands[(turn + 1) % 2] =  letters;
@@ -115,8 +114,46 @@ function exchangeLetters(turn, hands, letters) {
     return hands;
 };
 
-function updateGrid(grids, line, turn, hands) {
 
+// fonction pour mettre à jour toutes les variables de jeu après un placement de mot
+// fonctionne meme pour une nouvelle ligne tant que le numéro de ligne est bon
+// renvoie grids et hands mis à jour (meme fonctionnement que updateJarnac)
+function updatePlay(grids, line, turn, hands, new_word) {
+    var original_word = (grids[turn][line] != undefined) ? grids[turn][line] : [];
+    var letters = hands[turn];
+    var chars = [];
+
+    var difference = Array.from(([...new_word].flatMap(char => {
+        const countNew = count(new_word, char);
+        const countOriginal = count(original_word, char);
+        const countDifference = countNew - countOriginal;
+        
+        var charToAdd = (!chars.includes(char) 
+            ? Array.from({ length: countDifference }, () => char) 
+            : Array.from({ length: 0 }, () => char)
+        );
+        chars.push(char);
+        return charToAdd;
+    })
+    ));
+    var chars = [];
+    letters = Array.from((letters.flatMap(char => {
+        const countLetters = count(letters, char);
+        const countInDifference = count(difference, char);
+        const nbLetters = countLetters - countInDifference;
+        
+        var charToAdd = (!chars.includes(char) 
+            ? Array.from({ length: nbLetters }, () => char) 
+            : Array.from({ length: 0 }, () => char)
+        );
+        chars.push(char);
+        return charToAdd;
+    })
+    ));
+    hands[turn] = letters;
+    grids[turn][line] = new_word;
+
+    return [grids, hands];
 };
 
 // TESTS
@@ -127,6 +164,14 @@ x = updateJarnac(
     original_word = ["B", "O", "N", "J", "O", "U"], 
     new_word = [..."BONJOUR"]);
 
-console.log(x[0], x[1]);
+// console.log(x[0], x[1]);
+
+y = updatePlay(
+    grids = [[], []], 
+    line = 0, turn = 1,
+    hands = [[], [..."AJOUR"]],
+    new_word = [..."JOUR"]);
+
+console.log("grids :", y[0], "hands :", y[1]);
 
 // console.log(exchangeLetters(0, [["A", "A", "N", "R", "X", "L"],["B"]], ["A", "X", "L"]));
