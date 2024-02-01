@@ -11,12 +11,16 @@ function randomLetter() {
     var randomKey = keysArray[Math.floor(Math.random() * keysArray.length)];
     draw_pile[randomKey] --;
 
-    return randomKey
+    return randomKey;
     } else {
     console.log('Error : no more letters');
     }
-}
+};
 
+function drawLetters(turn, hands, nbLetters) {
+    hands[turn] = hands[turn].concat(Array.from({ length: nbLetters }, randomLetter));   
+    return hands;
+};
 
 function count(list, element){
     return list.reduce((count, list_element) => {
@@ -37,9 +41,7 @@ function updateJarnacWithForLoop (turn, hands, original_word, new_word) {
         }     
     }
     return difference
-}
-
-
+};
 
 
 function updateJarnac(turn, hands, original_word, new_word) {
@@ -107,13 +109,11 @@ function exchangeLetters(turn, hands, letters) {
         } 
     })
     ));
-    for (let i = 0; i<3; i++) {
-        playerLetters.push(randomLetter());
-
-    }
     hands[turn] = playerLetters;
+    drawLetters(turn, hands, 3);
+
     return hands;
 };
 
 
-console.log(exchangeLetters(0, [["A", "A", "N", "R", "X"],["B"]], ["A", "A", "X"]));
+console.log(exchangeLetters(0, [["A", "A", "N", "R", "X", "L"],["B"]], ["A", "A", "X"]));
