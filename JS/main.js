@@ -185,7 +185,7 @@ function step1_chose_line(){
             } else if (!isNaN(Number(str)) && Number.isInteger(Number(str))){
 
                 if (0 <= Number(str) && Number(str) < grids[(turn+1)%2].length){
-                    step1_input_word(hands[(turn+1)%2], grids[(turn+1)%2][Number(str)]).then(resolve)
+                    step1_input_word(hands[(turn+1)%2], grids[(turn+1)%2][Number(str)], Number(str)).then(resolve)
                 } else {
                     console.log("Bad line")
                     question_jarnac_line().then(resolve)
@@ -203,7 +203,7 @@ function step1_chose_line(){
 
 
 
-function step1_input_word(hand_letters, grid_letters){
+function step1_input_word(hand_letters, grid_letters, number){
 
     return new Promise((resolve, reject) => {
 
@@ -215,7 +215,8 @@ function step1_input_word(hand_letters, grid_letters){
             } else {
                 if (str.length > grid_letters.length && can_write_with(grid_letters, [...str]) && can_write_with([...str], grid_letters.concat(hand_letters)) && str.length >= 3 && str.length <= 9){
                     console.log("Mot valide")
-                    // faire qqch
+                    // fonction qui vient du fichier functions
+                    // grids, hands = updateJarnac(grids, number, turn, hands, grid_letters, [...str])
                     resolve()
                 } else {
                     console.log("Mot non valide")

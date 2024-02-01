@@ -1,9 +1,11 @@
-let draw_pile = {
+// VARIABLES
+var draw_pile = {
     "A": 14, "B": 4, "C": 7, "D": 5, "E": 19, "F": 2, "G": 4, "H": 2, "I": 11, "J": 1, "K": 1, "L": 6,
     "M": 5, "N": 9, "O": 8, "P": 4, "Q": 1, "R": 10, "S": 7, "T": 9, "U": 8, "V": 2, "W": 1, "X": 1, "Y": 2, "Z": 1
 };
 
 
+// FUNCTIONS
 function randomLetter() {
     var keysArray = Object.keys(draw_pile);
 
@@ -44,7 +46,7 @@ function updateJarnacWithForLoop (turn, hands, original_word, new_word) {
 };
 
 
-function updateJarnac(turn, hands, original_word, new_word) {
+function updateJarnac(grids, line, turn, hands, original_word, new_word) {
     var letters = hands[(turn + 1) % 2];
     
     var chars = [];
@@ -81,13 +83,12 @@ function updateJarnac(turn, hands, original_word, new_word) {
     ));
     
     hands[(turn + 1) % 2] =  letters;
-    return hands;
+    
+    grids[(turn + 1) % 2].splice(line, 1);
+    grids[turn].push([...new_word]); 
+    return [grids, hands];
     
 };
-
-  
-  
-// console.log(updateJarnac(1, [["a", "n", "n", "n", "x"],["b"]], [..."sorbets"], [..."brossent"]));
 
 
 function exchangeLetters(turn, hands, letters) {
@@ -111,9 +112,21 @@ function exchangeLetters(turn, hands, letters) {
     ));
     hands[turn] = playerLetters;
     drawLetters(turn, hands, 3);
-
     return hands;
 };
 
+function updateGrid(grids, line, turn, hands) {
 
-console.log(exchangeLetters(0, [["A", "A", "N", "R", "X", "L"],["B"]], ["A", "A", "X"]));
+};
+
+// TESTS
+x = updateJarnac(
+    grids = [[], [["B", "O", "N", "J", "O", "U"],["T", "E", "S", "T"]]], 
+    line = 0, turn = 0,
+    hands = [[], ["R"]],
+    original_word = ["B", "O", "N", "J", "O", "U"], 
+    new_word = [..."BONJOUR"]);
+
+console.log(x[0], x[1]);
+
+// console.log(exchangeLetters(0, [["A", "A", "N", "R", "X", "L"],["B"]], ["A", "X", "L"]));
