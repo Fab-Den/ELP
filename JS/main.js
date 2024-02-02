@@ -246,16 +246,6 @@ function count(list, element){
     }, 0);
 }
 
-
-function test_line_number_input(str, player_number){
-
-    if (Number.isInteger(Number(str))){
-        return Number(str) < hands[player_number].length;
-    } else {
-        return false
-    }
-}
-
 function step2_chose_exchange(){
     return new Promise((resolve, reject) => {
         readline_interface.question("Exchange 3 letters instead of drawing ? (yes/no) ", (str) => {
