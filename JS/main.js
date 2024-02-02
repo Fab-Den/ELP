@@ -1,5 +1,4 @@
-const { fonction1, fonction2 } = require('./test');
-fonction1();
+const { exchangeLetters, updateJarnac,  drawLetters, updatePlay } = require('./functions');
 
 
 const readline = require('readline');
@@ -9,34 +8,6 @@ const readline_interface = readline.createInterface({
     output: process.stdout
 });
 
-let draw_pile = {
-    "A": 14,
-    "B": 4,
-    "C": 7,
-    "D": 5,
-    "E": 19,
-    "F": 2,
-    "G": 4,
-    "H": 2,
-    "I": 11,
-    "J": 1,
-    "K": 1,
-    "L": 6,
-    "M": 5,
-    "N": 9,
-    "O": 8,
-    "P": 4,
-    "Q": 1,
-    "R": 10,
-    "S": 7,
-    "T": 9,
-    "U": 8,
-    "V": 2,
-    "W": 1,
-    "X": 1,
-    "Y": 2,
-    "Z": 1
-};
 
 let grids = [[], [["B", "O", "N", "J", "O", "U"]]]
 
@@ -52,7 +23,7 @@ let number_jarnac = 0
 function step1(){
     // jarnac ou pas
     if (turn !== 0){
-        step1_chose_jarnac().then(step2)
+        step1_test().then(step2)
 
     } else {
         step2()
@@ -65,7 +36,7 @@ function step2(){
     // tirer 1 lettre ou echanger
 
     if (turn > 1){
-        step2_chose_exchange().then(step3)
+        step_2_test().then(step3)
     } else {
         step3()
     }
@@ -81,8 +52,9 @@ function step3(){
 
 function change_turn(){
 
-    if (grids[turn%2].length !== 8){
-        console.log("Turn of player " + ((turn%2)+1).toString() + " : ")
+    if (grids[turn%2].length !== 8 && grids[(turn+1)%2].length !== 8){
+        console.log("######## Turn of player " + ((turn%2)+1).toString() + " ########")
+
         step1()
     } else {
         // faire des choses pour compter le score + affichage gagnant
@@ -93,6 +65,10 @@ function change_turn(){
 
 function step3_chose_do(){
     return new Promise((resolve, reject) => {
+        display_grid(turn%2)
+        display_letters(turn%2)
+
+
         readline_interface.question("Do you want to input a word ? (yes/no) ", (str) => {
             if (str === "yes"){
                 step3_chose_line().then(resolve)
@@ -113,14 +89,14 @@ function step3_chose_line(){
                 step3_chose_do().then(resolve)
             } else if (!isNaN(Number(str)) && Number.isInteger(Number(str))){
                 if (0 <= Number(str) && Number(str) < grids[turn%2].length){
-                    step3_input_word(hands[turn%2], grids[turn%2][Number(str)]).then(resolve)
+                    step3_input_word(Number(str)).then(resolve)
                 } else {
                     console.log("Bad line")
                     step3_chose_line().then(resolve)
                 }
             } else if (str === "no"){
                 if (grids[turn%2].length !== 8){
-                    step3_input_word(hands[turn%2], []).then(resolve)
+                    step3_input_word(-1).then(resolve)
                 }
                 else {
                     console.log("There is no more line on which we can add a word")
@@ -134,8 +110,12 @@ function step3_chose_line(){
     })
 }
 
-function step3_input_word(hand_letters, grid_letters){
+function step3_input_word(line_number){
     return new Promise((resolve, reject) => {
+
+        let hand_letters = hands[turn%2]
+        let grid_letters = ( grids[turn%2][line_number] ? line_number !== -1 : [] )
+
         readline_interface.question("Chose a word : ", (str) => {
             console.log("can_write_with([...str], hand_letters.concat(grid_letters)) && can_write_with(grid_letters, [...str]) : ", can_write_with([...str], hand_letters.concat(grid_letters)))
             if (str === ""){
@@ -144,8 +124,11 @@ function step3_input_word(hand_letters, grid_letters){
                 console.log("Bad word length")
                 step3_input_word(hand_letters, grid_letters).then(resolve)
             } else if (can_write_with([...str], hand_letters.concat(grid_letters)) && can_write_with(grid_letters, [...str]) && str.length > grid_letters.length){
-                // qqch quand c ok
-                console.log("YOUPIII")
+
+
+                updatePlay(grids, line_number, turn, hands, [...str])
+
+                step3_chose_do().then(resolve)
             } else {
                 console.log("Bad word")
                 step3_input_word(hand_letters, grid_letters).then(resolve)
@@ -156,11 +139,25 @@ function step3_input_word(hand_letters, grid_letters){
 
 
 
+function step1_test(){
+    return new Promise((resolve, reject) => {
+        if (grids[turn%2].length < 8){
+            display_grid((turn+1)%2)
+            display_letters((turn+1)%2)
+            step1_chose_jarnac().then(resolve)
+        } else {
+            resolve()
+        }
+    })
+}
+
 function step1_chose_jarnac(){
     return new Promise((resolve, reject) => {
         readline_interface.question("Jarnac (yes / no) : ", (str) => {
 
             if (str === "yes"){
+
+
                 step1_chose_line().then(resolve)
 
             } else if (str === "no"){
@@ -188,14 +185,14 @@ function step1_chose_line(){
                     step1_input_word(hands[(turn+1)%2], grids[(turn+1)%2][Number(str)], Number(str)).then(resolve)
                 } else {
                     console.log("Bad line")
-                    question_jarnac_line().then(resolve)
+                    step1_chose_line().then(resolve)
                 }
             } else if (str === "no"){
                 step1_input_word(hands[(turn+1)%2], []).then(resolve)
 
             } else {
                 console.log("Bad input")
-                question_jarnac_line().then(resolve)
+                step1_chose_line().then(resolve)
             }
         })
     })
@@ -203,7 +200,7 @@ function step1_chose_line(){
 
 
 
-function step1_input_word(hand_letters, grid_letters, number){
+function step1_input_word(hand_letters, grid_letters, line_number){
 
     return new Promise((resolve, reject) => {
 
@@ -215,9 +212,11 @@ function step1_input_word(hand_letters, grid_letters, number){
             } else {
                 if (str.length > grid_letters.length && can_write_with(grid_letters, [...str]) && can_write_with([...str], grid_letters.concat(hand_letters)) && str.length >= 3 && str.length <= 9){
                     console.log("Mot valide")
-                    // fonction qui vient du fichier functions
-                    // grids, hands = updateJarnac(grids, number, turn, hands, grid_letters, [...str])
-                    resolve()
+
+                    updateJarnac(grids, hands, line_number, turn, [...str])
+
+                    step1_test().then(resolve)
+
                 } else {
                     console.log("Mot non valide")
                     step1_input_word(hand_letters, grid_letters).then(resolve)
@@ -246,6 +245,18 @@ function count(list, element){
     }, 0);
 }
 
+
+function step_2_test(){
+    return new Promise((resolve, reject) => {
+        if (hands[turn%2].length >= 3){
+            step2_chose_exchange().then(resolve)
+        } else {
+            resolve()
+        }
+
+    })
+}
+
 function step2_chose_exchange(){
     return new Promise((resolve, reject) => {
         readline_interface.question("Exchange 3 letters instead of drawing ? (yes/no) ", (str) => {
@@ -253,6 +264,7 @@ function step2_chose_exchange(){
                 step2_chose_letters().then(resolve)
 
             } else if (str === "no"){
+                drawLetters(hands, turn%2, 1)
                 resolve()
             }
             else {
@@ -275,7 +287,7 @@ function step2_chose_letters(){
 
             } else {
                 if (can_write_with([...str], hands[turn])){
-                    // DO SOMETHING
+                    exchangeLetters(hands, turn, [...str])
                     resolve()
                 } else {
                     console.log("Invalid letters")
@@ -328,10 +340,10 @@ function display_letters(index){
     console.log(text)
 }
 
-// change_turn()
+change_turn()
 
-display_grid(1)
-display_letters(1)
+// display_grid(1)
+// display_letters(1)
 
 // async function question_exchange_letters()
 

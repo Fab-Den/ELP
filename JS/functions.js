@@ -19,10 +19,34 @@ function randomLetter() {
     }
 };
 
-function drawLetters(turn, hands, nbLetters) {
-    hands[turn] = hands[turn].concat(Array.from({ length: nbLetters }, randomLetter));   
-    return hands;
+function drawLetters(hands, player_index, nbLetters) {
+    hands[player_index] = hands[player_index].concat(Array.from({ length: nbLetters }, randomLetter));
 };
+
+function remove_letters_from_hand(hands, player_index, letters_to_remove){
+    let chars = []
+
+    console.log("HANDDDD : ", hands)
+
+    hands[player_index] = Array.from((hands[player_index].flatMap(char => {
+
+            let countInHand = count(hands[player_index], char);
+            let countInToRemove = count(letters_to_remove, char);
+
+            // nombre de lettres restantes après avoir retiré celles utilisées pour le mot
+            let nbLetters = countInHand - countInToRemove;
+
+            let charToAdd = (!chars.includes(char)
+                    ? Array.from({ length: nbLetters }, () => char)
+                    : Array.from({ length: 0 }, () => char)
+            );
+
+            chars.push(char);
+            return charToAdd;
+        })
+    ));
+    console.log("HANDDDD : ", hands)
+}
 
 function count(list, element){
     return list.reduce((count, list_element) => {
@@ -31,8 +55,8 @@ function count(list, element){
 }
 
 function updateJarnacWithForLoop (turn, hands, original_word, new_word) {
-    var letters = hands[(turn+1)%2];
-    var difference = [];
+    let letters = hands[(turn+1)%2];
+    let difference = [];
 
     for (let i = 0; i <new_word.length; i++) {
         let char = new_word[i]
@@ -46,58 +70,49 @@ function updateJarnacWithForLoop (turn, hands, original_word, new_word) {
 };
 
 
-function updateJarnac(grids, line, turn, hands, original_word, new_word) {
-    var letters = hands[(turn + 1) % 2];
-    
-    var chars = [];
-    var difference = Array.from(([...new_word].flatMap(char => {
-        const countNew = count(new_word, char);
-        const countOriginal = count(original_word, char);
-        
-      // Calculate the difference in counts
-        const countDifference = countNew - countOriginal;
-        
-        var charToAdd = (!chars.includes(char) 
-            ? Array.from({ length: countDifference }, () => char) 
-            : Array.from({ length: 0 }, () => char)
+function difference_between_and(long, short){
+    let chars = [];
+    return Array.from((long.flatMap(char => {
+
+        let countNew = count(long, char);
+        let countOriginal = count(short, char);
+
+        // Calculate the difference in counts
+        let countDifference = countNew - countOriginal;
+
+        let charToAdd = (!chars.includes(char)
+                ? Array.from({ length: countDifference }, () => char)
+                : Array.from({ length: 0 }, () => char)
         );
         chars.push(char);
         return charToAdd;
     })));
-   ;
-    
-    var chars = [];
-    letters = Array.from((letters.flatMap(char => {
-        const countLetters = count(letters, char);
-        const countInDifference = count(difference, char);
-        const nbLetters = countLetters - countInDifference;
-        
-        var charToAdd = (!chars.includes(char) 
-            ? Array.from({ length: nbLetters }, () => char) 
-            : Array.from({ length: 0 }, () => char)
-        );
-        chars.push(char);
-        return charToAdd;
-    })
-    ));
-    
-    hands[(turn + 1) % 2] =  letters;
-    
-    grids[(turn + 1) % 2].splice(line, 1);
-    grids[turn].push([...new_word]); 
-    return [grids, hands];
-    
+}
+
+
+
+function updateJarnac(grids, hands, line_number, turn, new_word) {
+        console.log("Mot originel : ", grids[(turn+1)%2][line_number])
+        let difference = difference_between_and(new_word, grids[(turn+1)%2][line_number])
+        console.log("DIfférences de lettres : ", difference)
+        console.log("Mains avant d'enlever les lettres manquantes :", hands)
+        remove_letters_from_hand(hands, (turn + 1) % 2, difference)
+        console.log("Mains après : " ,hands)
+
+        if (line !== -1){
+            grids[(turn + 1) % 2].splice(line, 1);
+        }
+
+        grids[turn % 2].push([...new_word]);
+
 };
 
 
-function exchangeLetters(turn, hands, letters) {
-    var playerLetters = hands[turn];
-    
-    var chars = [];
+function exchangeLetters(hands, turn, letters) {
+    let chars = [];
 
-    var playerLetters = Array.from((playerLetters.flatMap( char => {
-        var diff = count(playerLetters, char) - count(letters, char)
-
+    hands[turn%2] = Array.from((hands[turn%2].flatMap( char => {
+        let diff = count(hands[turn%2], char) - count(letters, char)
 
         if (!chars.includes(char)) {
             draw_pile[char] += count(letters, char)
@@ -109,9 +124,9 @@ function exchangeLetters(turn, hands, letters) {
         } 
     })
     ));
-    hands[turn] = playerLetters;
-    drawLetters(turn, hands, 3);
-    return hands;
+
+    drawLetters(hands, turn%2, 3);
+
 };
 
 
@@ -119,53 +134,35 @@ function exchangeLetters(turn, hands, letters) {
 // fonctionne meme pour une nouvelle ligne tant que le numéro de ligne est bon
 // renvoie grids et hands mis à jour (meme fonctionnement que updateJarnac)
 function updatePlay(grids, line, turn, hands, new_word) {
-    var original_word = (grids[turn][line] != undefined) ? grids[turn][line] : [];
-    var letters = hands[turn];
-    var chars = [];
 
-    var difference = Array.from(([...new_word].flatMap(char => {
-        const countNew = count(new_word, char);
-        const countOriginal = count(original_word, char);
-        const countDifference = countNew - countOriginal;
-        
-        var charToAdd = (!chars.includes(char) 
-            ? Array.from({ length: countDifference }, () => char) 
-            : Array.from({ length: 0 }, () => char)
-        );
-        chars.push(char);
-        return charToAdd;
-    })
-    ));
-    var chars = [];
-    letters = Array.from((letters.flatMap(char => {
-        const countLetters = count(letters, char);
-        const countInDifference = count(difference, char);
-        const nbLetters = countLetters - countInDifference;
-        
-        var charToAdd = (!chars.includes(char) 
-            ? Array.from({ length: nbLetters }, () => char) 
-            : Array.from({ length: 0 }, () => char)
-        );
-        chars.push(char);
-        return charToAdd;
-    })
-    ));
-    hands[turn] = letters;
-    grids[turn][line] = new_word;
 
-    return [grids, hands];
+    let original_word = (grids[turn][line] !== undefined) ? grids[turn][line] : [];
+    let letters = hands[turn];
+
+    let difference = difference_between_and(new_word, original_word)
+
+    remove_letters_from_hand(hands, turn%2, difference)
+
+    if (line !== -1){
+        grids[turn%2][line] = [...new_word];
+    } else {
+        grids[turn%2].push([...new_word])
+    }
 };
 
 // TESTS
-x = updateJarnac(
-    grids = [[], [["B", "O", "N", "J", "O", "U"],["T", "E", "S", "T"]]], 
-    line = 0, turn = 0,
-    hands = [[], ["R"]],
-    original_word = ["B", "O", "N", "J", "O", "U"], 
-    new_word = [..."BONJOUR"]);
 
-// console.log(x[0], x[1]);
 
+let grids = [[], [["B", "O", "N", "J", "O", "U"],["T", "E", "S", "T"]]]
+let line = 0
+let turn = 0
+let hands = [[], ["R", "R", "G", "H"]]
+let original_word = ["B", "O", "N", "J", "O", "U"]
+let new_word = [..."BONJOUR"]
+
+
+
+/*
 y = updatePlay(
     grids = [[], []], 
     line = 0, turn = 1,
@@ -173,5 +170,17 @@ y = updatePlay(
     new_word = [..."JOUR"]);
 
 console.log("grids :", y[0], "hands :", y[1]);
-
+*/
 // console.log(exchangeLetters(0, [["A", "A", "N", "R", "X", "L"],["B"]], ["A", "X", "L"]));
+
+// let hands = [["A", "B", "C", "D", "E"], []]
+
+// remove_letters_from_hand(hands, 1, ["R"])
+// console.log(hands)
+let original = ["B", "O", "N", "J", "O", "U"]
+let word = ["B", "O", "N", "J", "O", "U", "N"]
+console.log(difference_between_and(word, original))
+console.log(original)
+console.log(word)
+
+module.exports = {exchangeLetters, updateJarnac, drawLetters, updatePlay };
