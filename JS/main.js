@@ -21,8 +21,8 @@ let number_jarnac = 0
 
 
 function start_game(){
-    // grids = [[], []]
-    // hands = [[], []]
+    grids = [[], []]
+    hands = [[], []]
     turn = 0
     drawLetters(hands, 0, 6)
     drawLetters(hands, 1, 6)
