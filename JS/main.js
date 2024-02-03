@@ -1,4 +1,4 @@
-const { exchangeLetters, updateJarnac,  drawLetters, updatePlay , count} = require('./functions');
+const { exchangeLetters, updateJarnac,  drawLetters, updatePlay , count, can_write_with} = require('./functions');
 
 
 const readline = require('readline');
@@ -58,7 +58,6 @@ function step1(){
 
 }
 
-
 function step2(){
     // tirer 1 lettre ou echanger
 
@@ -71,7 +70,6 @@ function step2(){
 
 }
 
-
 function step3(){
     // jouer mot
     step3_chose_do().then(() => {turn += 1; change_turn()})
@@ -79,19 +77,156 @@ function step3(){
 }
 
 function change_turn(){
-
     if (grids[turn%2].length !== 8 && grids[(turn+1)%2].length !== 8){
         console.log('\033[2J')
         console.log("######## Turn of player " + ((turn%2)+1).toString() + " ########")
 
         step1()
     } else {
-        // faire des choses pour compter le score + affichage gagnant
         end_game()
     }
-
-
 }
+
+function step1_test(){
+    return new Promise((resolve, reject) => {
+        if (grids[turn%2].length < 8){
+            display_grid((turn+1)%2)
+            display_letters((turn+1)%2)
+            step1_chose_jarnac().then(resolve)
+        } else {
+            resolve()
+        }
+    })
+}
+
+function step1_chose_jarnac(){
+    return new Promise((resolve, reject) => {
+        readline_interface.question("Jarnac (yes / no) : ", (str) => {
+
+            if (str === "yes"){
+
+
+                step1_chose_line().then(resolve)
+
+            } else if (str === "no"){
+                resolve()
+
+            } else {
+                console.log("Bad input")
+                step1_chose_jarnac().then(resolve)
+            }
+        })
+    })
+}
+
+function step1_chose_line(){
+    return new Promise((resolve, reject) => {
+        readline_interface.question("Chose a line (number / no) : ", (str) => {
+            if (str === ""){
+                step1_chose_jarnac().then(resolve)
+
+            } else if (!isNaN(Number(str)) && Number.isInteger(Number(str))){
+
+                if (0 <= Number(str) && Number(str) < grids[(turn+1)%2].length){
+                    step1_input_word(hands[(turn+1)%2], grids[(turn+1)%2][Number(str)], Number(str)).then(resolve)
+                } else {
+                    console.log("Bad line")
+                    step1_chose_line().then(resolve)
+                }
+            } else if (str === "no"){
+                step1_input_word(hands[(turn+1)%2], []).then(resolve)
+
+            } else {
+                console.log("Bad input")
+                step1_chose_line().then(resolve)
+            }
+        })
+    })
+}
+
+function step1_input_word(hand_letters, grid_letters, line_number){
+
+    return new Promise((resolve, reject) => {
+
+
+        readline_interface.question("Input a word : ", (str) => {
+
+            if (str === ""){
+                step1_chose_line().then(resolve)
+            } else {
+                if (str.length > grid_letters.length && can_write_with(grid_letters, [...str]) && can_write_with([...str], grid_letters.concat(hand_letters)) && str.length >= 3 && str.length <= 9){
+                    console.log("Mot valide")
+
+                    updateJarnac(grids, hands, line_number, turn, [...str])
+
+                    step1_test().then(resolve)
+
+                } else {
+                    console.log("Mot non valide")
+                    step1_input_word(hand_letters, grid_letters).then(resolve)
+                }
+            }
+
+        })
+    })
+}
+
+
+function step2_test(){
+    return new Promise((resolve, reject) => {
+        if (hands[turn%2].length >= 3){
+            step2_chose_exchange().then(resolve)
+        } else {
+            drawLetters(hands, turn%2, 1)
+            resolve()
+        }
+
+    })
+}
+
+function step2_chose_exchange(){
+    return new Promise((resolve, reject) => {
+        display_letters(turn%2)
+        readline_interface.question("Exchange 3 letters instead of drawing ? (yes/no) ", (str) => {
+            if (str === "yes"){
+                step2_chose_letters().then(resolve)
+
+            } else if (str === "no"){
+                drawLetters(hands, turn%2, 1)
+                resolve()
+            }
+            else {
+                step2_chose_exchange().then(resolve)
+            }
+        })
+
+    })
+}
+
+function step2_chose_letters(){
+    return new Promise((resolve, reject) => {
+        readline_interface.question("Chose 3 letters to exchange : ", (str) => {
+            if (str === ""){
+                step2_chose_exchange().then(resolve)
+
+            } else if (str.length !== 3){
+                console.log("You must select exactly 3 letters (no spaces)")
+                step2_chose_letters().then(resolve)
+
+            } else {
+                if (can_write_with([...str], hands[turn%2])){
+                    exchangeLetters(hands, turn, [...str])
+                    resolve()
+                } else {
+                    console.log("Invalid letters")
+                    step2_chose_letters().then(resolve)
+                }
+
+            }
+        })
+    })
+}
+
 
 function step3_chose_do(){
     return new Promise((resolve, reject) => {
@@ -112,7 +247,6 @@ function step3_chose_do(){
         })
     })
 }
-
 
 function step3_chose_line(){
     return new Promise((resolve, reject) => {
@@ -172,162 +306,8 @@ function step3_input_word(line_number){
 
 
 
-function step1_test(){
-    return new Promise((resolve, reject) => {
-        if (grids[turn%2].length < 8){
-            display_grid((turn+1)%2)
-            display_letters((turn+1)%2)
-            step1_chose_jarnac().then(resolve)
-        } else {
-            resolve()
-        }
-    })
-}
-
-function step1_chose_jarnac(){
-    return new Promise((resolve, reject) => {
-        readline_interface.question("Jarnac (yes / no) : ", (str) => {
-
-            if (str === "yes"){
 
 
-                step1_chose_line().then(resolve)
-
-            } else if (str === "no"){
-                resolve()
-
-            } else {
-                console.log("Bad input")
-                step1_chose_jarnac().then(resolve)
-            }
-        })
-    })
-}
-
-
-
-function step1_chose_line(){
-    return new Promise((resolve, reject) => {
-        readline_interface.question("Chose a line (number / no) : ", (str) => {
-            if (str === ""){
-                step1_chose_jarnac().then(resolve)
-
-            } else if (!isNaN(Number(str)) && Number.isInteger(Number(str))){
-
-                if (0 <= Number(str) && Number(str) < grids[(turn+1)%2].length){
-                    step1_input_word(hands[(turn+1)%2], grids[(turn+1)%2][Number(str)], Number(str)).then(resolve)
-                } else {
-                    console.log("Bad line")
-                    step1_chose_line().then(resolve)
-                }
-            } else if (str === "no"){
-                step1_input_word(hands[(turn+1)%2], []).then(resolve)
-
-            } else {
-                console.log("Bad input")
-                step1_chose_line().then(resolve)
-            }
-        })
-    })
-}
-
-
-
-function step1_input_word(hand_letters, grid_letters, line_number){
-
-    return new Promise((resolve, reject) => {
-
-
-        readline_interface.question("Input a word : ", (str) => {
-
-            if (str === ""){
-                step1_chose_line().then(resolve)
-            } else {
-                if (str.length > grid_letters.length && can_write_with(grid_letters, [...str]) && can_write_with([...str], grid_letters.concat(hand_letters)) && str.length >= 3 && str.length <= 9){
-                    console.log("Mot valide")
-
-                    updateJarnac(grids, hands, line_number, turn, [...str])
-
-                    step1_test().then(resolve)
-
-                } else {
-                    console.log("Mot non valide")
-                    step1_input_word(hand_letters, grid_letters).then(resolve)
-                }
-            }
-
-        })
-    })
-}
-
-
-
-
-function can_write_with(list1, list2){
-    for (let i = 0; i < list1.length; i++){
-        if (count(list1, list1[i]) > count(list2, list1[i])){
-            return false
-        }
-    }
-    return true
-}
-
-
-
-function step2_test(){
-    return new Promise((resolve, reject) => {
-        if (hands[turn%2].length >= 3){
-            step2_chose_exchange().then(resolve)
-        } else {
-            drawLetters(hands, turn%2, 1)
-            resolve()
-        }
-
-    })
-}
-
-function step2_chose_exchange(){
-    return new Promise((resolve, reject) => {
-        display_letters(turn%2)
-        readline_interface.question("Exchange 3 letters instead of drawing ? (yes/no) ", (str) => {
-            if (str === "yes"){
-                step2_chose_letters().then(resolve)
-
-            } else if (str === "no"){
-                drawLetters(hands, turn%2, 1)
-                resolve()
-            }
-            else {
-                step2_chose_exchange().then(resolve)
-            }
-        })
-
-    })
-}
-
-function step2_chose_letters(){
-    return new Promise((resolve, reject) => {
-        readline_interface.question("Chose 3 letters to exchange : ", (str) => {
-            if (str === ""){
-                step2_chose_exchange().then(resolve)
-
-            } else if (str.length !== 3){
-                console.log("You must select exactly 3 letters (no spaces)")
-                step2_chose_letters().then(resolve)
-
-            } else {
-                if (can_write_with([...str], hands[turn%2])){
-                    exchangeLetters(hands, turn, [...str])
-                    resolve()
-                } else {
-                    console.log("Invalid letters")
-                    step2_chose_letters().then(resolve)
-                }
-
-            }
-        })
-    })
-}
 
 
 function display_grid(index){

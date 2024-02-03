@@ -128,5 +128,13 @@ function updatePlay(grids, line, turn, hands, new_word) {
     }
 };
 
+function can_write_with(list1, list2){
+    for (let i = 0; i < list1.length; i++){
+        if (count(list1, list1[i]) > count(list2, list1[i])){
+            return false
+        }
+    }
+    return true
+}
 
-module.exports = {exchangeLetters, updateJarnac, drawLetters, updatePlay, count};
+module.exports = {exchangeLetters, updateJarnac, drawLetters, updatePlay, count, can_write_with};
