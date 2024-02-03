@@ -371,35 +371,3 @@ function display_letters(index){
 }
 
 start_game()
-// display_grid(1)
-// display_letters(1)
-
-// async function question_exchange_letters()
-
-
-// Debut du tour
-// 2 x Choix de Jarnac (pas le premier)
-//  -> selectionne ligne sur la grille adverse
-//  -> prompt mot + test si mot valide + modification de la grille adverse + sa grille + modification de la main
-//  -> si entrer sans caractère -> back à la selection précédente
-//
-// Choix entre piocher une seule lettre ou echanger 3 lettres (pas la première prise de main)
-
-// Suite du tour
-// prompt choix entre
-//  -> modifie un mot -> choisir une ligne / prompt le mot + tester si bonne taille + valide (pour plus tard) + modifier dans les grilles + enlever les lettres de la main
-//  -> ajouter un mot -> rompt le mot + tester si bonne taille + valide (pour plus tard) + modifier dans les grilles + enlever les lettres de la main
-//  -> passer (fin du tour)
-// pour chaque choix -> test si fin de partie
-
-
-// list functions
-// -> compter les points
-// -> tester la fin de partie
-// -> piocher lettres + retirer de la pioche
-// -> tester validité mot
-// -> modification d'une ligne
-// -> modification main (en paramètre les lettres retirées)
-// ->
-
-// ne pas oublier de fermer l'interface à la fin du jeu
