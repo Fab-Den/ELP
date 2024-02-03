@@ -9,9 +9,9 @@ const readline_interface = readline.createInterface({
 });
 
 
-let grids = [[], [["B", "O", "N", "J", "O", "U"], ["B", "O", "N", "J", "O", "U"], ["B", "O", "N", "J", "O", "U"], ["B", "O", "N", "J", "O", "U"], ["B", "O", "N", "J", "O", "U"], ["B", "O", "N", "J", "O", "U"], ["B", "O", "N", "J", "O", "U"]]]
+let grids = [[], []]
 
-let hands= [[], ["O", "N", "B"]]
+let hands= [[], []]
 
 let turn = 0;
 
